@@ -15,7 +15,7 @@ app.get("/video-info", async (req, res) => {
         const html = await fetch(targetUrl).then(r => r.text());
 
         // preloadのm3u8を抽出
-        const match = html.match(/href="([^"]+_TPL_\.av1\.mp4\.m3u8)"/);
+        const match = html.match(/href="([^"]+_TPL_.*?\.mp4\.m3u8)"/);
 
         if (!match) {
             return res.status(404).json({ error: "m3u8 not found" });
@@ -31,7 +31,10 @@ app.get("/video-info", async (req, res) => {
         const resolutions = multiMatch
             ? multiMatch[1]
                 .split(",")
-                .map(v => v.split(":")[1])
+                .map(v => {
+                    const parts = v.split(":");
+                    return parts[1] || parts[0].split("x")[1];
+                })
                 .filter(Boolean)
             : [];
 
@@ -49,7 +52,7 @@ app.get("/video-info", async (req, res) => {
 function extractId(url) {
     const u = new URL(url);
     const parts = u.pathname.split("/").filter(Boolean);
-    return parts[0];
+    return parts[0].split(",")[0];
 }
 
 function safeId(id) {
